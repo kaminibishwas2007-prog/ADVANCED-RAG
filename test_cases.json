@@ -1,0 +1,29 @@
+[
+    {
+        "question": "What is Retrieval Augmented Generation?",
+        "expected_sources": [
+            "sample.txt"
+        ],
+        "expected_keywords": [
+            "retrieval",
+            "information",
+            "language models",
+            "external knowledge"
+        ],
+        "top_k": 4,
+        "max_distance": 1.0
+    },
+    {
+        "question": "What is RAG?",
+        "expected_sources": [
+            "sample.txt"
+        ],
+        "expected_keywords": [
+            "retrieval",
+            "generation",
+            "information"
+        ],
+        "top_k": 4,
+        "max_distance": 1.0
+    }
+]

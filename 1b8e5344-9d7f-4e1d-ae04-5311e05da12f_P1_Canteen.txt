@@ -1,0 +1,109 @@
+import java.util.Scanner;
+class Order {
+String[] itemNames;
+double[] prices;
+Order(String[] itemNames, double[] prices) {
+this.itemNames = itemNames;
+this.prices = prices;
+}
+double calculateTotal(double[] prices) {
+double total = 0;
+for (double price : prices) {
+total += price;
+}
+return total;
+}
+}
+public class P1_Canteen {
+public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        String[] menu = {"Burger", "Pizza", "Sandwich", "Coffee"};
+        double[] menuPrices = {120, 180, 80, 50};
+
+        String[] selectedItems = new String[10];
+        double[] selectedPrices = new double[10];
+
+        int count = 0;
+        int choice;
+
+        do {
+            System.out.println("\n--- CANTEEN MENU ---");
+            System.out.println("1. Burger - Rs.120");
+            System.out.println("2. Pizza - Rs.180");
+            System.out.println("3. Sandwich - Rs.80");
+            System.out.println("4. Coffee - Rs.50");
+            System.out.println("5. Finish Order");
+
+            System.out.print("Enter choice: ");
+            choice = sc.nextInt();
+
+            switch (choice) {
+                case 1:
+                    selectedItems[count] = menu[0];
+                    selectedPrices[count] = menuPrices[0];
+                    count++;
+                    break;
+
+                case 2:
+                    selectedItems[count] = menu[1];
+                    selectedPrices[count] = menuPrices[1];
+                    count++;
+                    break;
+
+                case 3:
+                    selectedItems[count] = menu[2];
+                    selectedPrices[count] = menuPrices[2];
+                    count++;
+                    break;
+
+                case 4:
+                    selectedItems[count] = menu[3];
+                    selectedPrices[count] = menuPrices[3];
+                    count++;
+                    break;
+
+                case 5:
+                    System.out.println("Order completed.");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice!");
+            }
+
+        } while (choice != 5);
+
+        String[] finalItems = new String[count];
+        double[] finalPrices = new double[count];
+
+        for (int i = 0; i < count; i++) {
+            finalItems[i] = selectedItems[i];
+            finalPrices[i] = selectedPrices[i];
+        }
+
+        Order order = new Order(finalItems, finalPrices);
+
+        double total = order.calculateTotal(finalPrices);
+
+        System.out.println("\n--- BILL ---");
+
+        for (int i = 0; i < count; i++) {
+            System.out.println(finalItems[i].toUpperCase()
+                    + " - Rs." + finalPrices[i]);
+        }
+
+        System.out.println("Total: Rs." + total);
+
+        if (total > 200) {
+            double discount = total * 0.10;
+            total = total - discount;
+            System.out.println("10% Discount Applied");
+        } else {
+            System.out.println("No Discount");
+        }
+
+        System.out.println("Final Bill: Rs." + total);
+
+        sc.close();
+    }
+}

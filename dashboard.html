@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Advanced RAG | Evaluation Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #080d18;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .brand h1 {
+            font-size: 28px;
+            color: #ffffff;
+        }
+
+        .brand span {
+            color: #38bdf8;
+        }
+
+        .brand p {
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .status {
+            background: #102c27;
+            color: #4ade80;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .secondary {
+            background: #1e293b;
+        }
+
+        .secondary:hover {
+            background: #334155;
+        }
+
+        .error {
+            display: none;
+            background: #451a1a;
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #111b2e;
+            border: 1px solid #26364f;
+            border-radius: 14px;
+            padding: 24px;
+        }
+
+        .card p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .card h2 {
+            font-size: 30px;
+            color: #38bdf8;
+        }
+
+        .card small {
+            color: #64748b;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .section {
+            background: #111b2e;
+            border: 1px solid #26364f;
+            border-radius: 14px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .section h2 {
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-box {
+            height: 300px;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #26364f;
+            font-size: 13px;
+        }
+
+        th {
+            color: #38bdf8;
+            background: #16243a;
+        }
+
+        td {
+            color: #cbd5e1;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .footer {
+            text-align: center;
+            color: #64748b;
+            padding: 25px;
+            font-size: 13px;
+        }
+
+        @media(max-width: 1000px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width: 650px) {
+            body {
+                padding: 15px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .charts {
+                grid-template-columns: 1fr;
+            }
+
+            .brand h1 {
+                font-size: 22px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <div class="brand">
+
+            <h1>ADVANCED <span>RAG</span></h1>
+
+            <p>AI Retrieval & Evaluation Intelligence Dashboard</p>
+
+        </div>
+
+        <div class="status" id="status">
+            ● Connecting...
+        </div>
+
+    </header>
+
+
+    <div class="actions">
+
+        <button onclick="loadDashboard()">
+            Refresh Evaluation
+        </button>
+
+        <button class="secondary" onclick="downloadReport()">
+            Download Report
+        </button>
+
+    </div>
+
+
+    <div class="error" id="error">
+        Evaluation report could not be loaded.
+    </div>
+
+
+    <!-- METRIC CARDS -->
+
+    <div class="cards">
+
+        <div class="card">
+
+            <p>Total Test Cases</p>
+
+            <h2 id="totalTests">--</h2>
+
+            <small>Evaluation dataset</small>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>Retrieval Precision</p>
+
+            <h2 id="precision">--</h2>
+
+            <small>Relevant retrieved sources</small>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>Source Recall</p>
+
+            <h2 id="recall">--</h2>
+
+            <small>Expected sources retrieved</small>
+
+        </div>
+
+
+        <div class="card">
+
+            <p>Keyword Coverage</p>
+
+            <h2 id="coverage">--</h2>
+
+            <small>Expected answer keywords</small>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESPONSE TIME -->
+
+    <div class="section">
+
+        <h2>Performance Overview</h2>
+
+        <div class="cards">
+
+            <div class="card">
+
+                <p>Average Response Time</p>
+
+                <h2 id="responseTime">--</h2>
+
+                <small>Seconds per question</small>
+
+            </div>
+
+            <div class="card">
+
+                <p>Evaluation Status</p>
+
+                <h2 id="evaluationStatus">--</h2>
+
+                <small>Report availability</small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- CHARTS -->
+
+    <div class="charts">
+
+        <div class="section">
+
+            <h2>Evaluation Metrics</h2>
+
+            <div class="chart-box">
+
+                <canvas id="metricsChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <h2>Response Time Analysis</h2>
+
+            <div class="chart-box">
+
+                <canvas id="timeChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- TEST RESULTS -->
+
+    <div class="section">
+
+        <h2>Individual Test Case Results</h2>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Test Case</th>
+                        <th>Question</th>
+                        <th>Precision</th>
+                        <th>Recall</th>
+                        <th>Keyword Coverage</th>
+                        <th>Time (Seconds)</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="resultsTable">
+
+                    <tr>
+                        <td colspan="6">Loading results...</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer">
+
+        Advanced RAG Pipeline | AI Evaluation System
+
+        <br><br>
+
+        Powered by Python, ChromaDB, Ollama and FastAPI
+
+    </div>
+
+</div>
+
+
+<script>
+
+    let metricsChart = null;
+    let timeChart = null;
+
+    let currentReport = null;
+
+
+    // =====================================
+    // LOAD EVALUATION REPORT
+    // =====================================
+
+    async function loadDashboard() {
+
+        const status = document.getElementById("status");
+
+        const error = document.getElementById("error");
+
+        status.innerText = "● Loading...";
+        error.style.display = "none";
+
+        try {
+
+            const response = await fetch(
+                "/evaluation/reports/evaluation_report.json?t=" + Date.now()
+            );
+
+            if (!response.ok) {
+
+                throw new Error("Report not found. Run evaluator.py first.");
+
+            }
+
+            const report = await response.json();
+
+            currentReport = report;
+
+            updateDashboard(report);
+
+            status.innerText = "● Evaluation Loaded";
+
+        }
+
+        catch (err) {
+
+            status.innerText = "● Error";
+
+            error.innerText = err.message;
+
+            error.style.display = "block";
+
+            console.error(err);
+
+        }
+
+    }
+
+
+    // =====================================
+    // UPDATE DASHBOARD
+    // =====================================
+
+    function updateDashboard(report) {
+
+        document.getElementById("totalTests").innerText =
+            report.total_test_cases;
+
+        document.getElementById("precision").innerText =
+            report.average_retrieval_precision + "%";
+
+        document.getElementById("recall").innerText =
+            report.average_source_recall + "%";
+
+        document.getElementById("coverage").innerText =
+            report.average_answer_keyword_coverage + "%";
+
+        document.getElementById("responseTime").innerText =
+            report.average_response_time_seconds + " s";
+
+        document.getElementById("evaluationStatus").innerText =
+            "Completed";
+
+
+        updateCharts(report);
+
+        updateTable(report.test_results);
+
+    }
+
+
+    // =====================================
+    // UPDATE CHARTS
+    // =====================================
+
+    function updateCharts(report) {
+
+        const metricsCanvas =
+            document.getElementById("metricsChart");
+
+        const timeCanvas =
+            document.getElementById("timeChart");
+
+
+        if (metricsChart) {
+            metricsChart.destroy();
+        }
+
+        if (timeChart) {
+            timeChart.destroy();
+        }
+
+
+        metricsChart = new Chart(metricsCanvas, {
+
+            type: "bar",
+
+            data: {
+
+                labels: [
+                    "Precision",
+                    "Recall",
+                    "Keyword Coverage"
+                ],
+
+                datasets: [{
+
+                    label: "Evaluation Score (%)",
+
+                    data: [
+                        report.average_retrieval_precision,
+                        report.average_source_recall,
+                        report.average_answer_keyword_coverage
+                    ],
+
+                    backgroundColor: [
+                        "#38bdf8",
+                        "#818cf8",
+                        "#34d399"
+                    ],
+
+                    borderRadius: 8
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        max: 100,
+
+                        ticks: {
+                            color: "#94a3b8"
+                        },
+
+                        grid: {
+                            color: "#26364f"
+                        }
+
+                    },
+
+                    x: {
+
+                        ticks: {
+                            color: "#94a3b8"
+                        },
+
+                        grid: {
+                            display: false
+                        }
+
+                    }
+
+                },
+
+                plugins: {
+
+                    legend: {
+                        labels: {
+                            color: "#ffffff"
+                        }
+                    }
+
+                }
+
+            }
+
+        });
+
+
+        const results = report.test_results || [];
+
+        timeChart = new Chart(timeCanvas, {
+
+            type: "line",
+
+            data: {
+
+                labels: results.map(
+                    item => "Test " + item.test_case
+                ),
+
+                datasets: [{
+
+                    label: "Response Time (Seconds)",
+
+                    data: results.map(
+                        item => item.response_time_seconds
+                    ),
+
+                    borderColor: "#38bdf8",
+
+                    backgroundColor: "rgba(56, 189, 248, 0.15)",
+
+                    fill: true,
+
+                    tension: 0.35
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        ticks: {
+                            color: "#94a3b8"
+                        },
+
+                        grid: {
+                            color: "#26364f"
+                        }
+
+                    },
+
+                    x: {
+
+                        ticks: {
+                            color: "#94a3b8"
+                        },
+
+                        grid: {
+                            display: false
+                        }
+
+                    }
+
+                },
+
+                plugins: {
+
+                    legend: {
+                        labels: {
+                            color: "#ffffff"
+                        }
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================
+    // UPDATE RESULTS TABLE
+    // =====================================
+
+    function updateTable(results) {
+
+        const table =
+            document.getElementById("resultsTable");
+
+        table.innerHTML = "";
+
+        if (!results || results.length === 0) {
+
+            table.innerHTML =
+                "<tr><td colspan='6'>No test results available</td></tr>";
+
+            return;
+
+        }
+
+        results.forEach(item => {
+
+            const row = document.createElement("tr");
+
+            const values = [
+
+                item.test_case,
+
+                item.question,
+
+                item.retrieval_precision + "%",
+
+                item.source_recall + "%",
+
+                item.answer_keyword_coverage + "%",
+
+                item.response_time_seconds
+
+            ];
+
+            values.forEach(value => {
+
+                const cell = document.createElement("td");
+
+                cell.textContent = value;
+
+                row.appendChild(cell);
+
+            });
+
+            table.appendChild(row);
+
+        });
+
+    }
+
+
+    // =====================================
+    // DOWNLOAD REPORT
+    // =====================================
+
+    function downloadReport() {
+
+        if (!currentReport) {
+
+            alert("No evaluation report available.");
+
+            return;
+
+        }
+
+        const blob = new Blob(
+
+            [JSON.stringify(currentReport, null, 4)],
+
+            { type: "application/json" }
+
+        );
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+
+        link.download = "rag_evaluation_report.json";
+
+        link.click();
+
+        URL.revokeObjectURL(url);
+
+    }
+
+
+    // =====================================
+    // INITIALIZE
+    // =====================================
+
+    loadDashboard();
+
+</script>
+
+</body>
+
+</html>
